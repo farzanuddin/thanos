@@ -8,6 +8,25 @@
     let arr = [];
     let removed = new Set();
     let willRemove = new Set();
+    let cellRefs = [];
+    let particles = [];
+    let particlesContainer;
+    
+    function register(node, idx) {
+        let current = idx;
+        cellRefs[current] = node;
+        return {
+            update(newIdx) {
+                if (newIdx === current) return;
+                cellRefs[current] = null;
+                current = newIdx;
+                cellRefs[current] = node;
+            },
+            destroy() {
+                cellRefs[current] = null;
+            },
+        };
+    }
     let running = false;
     let balanced = false;
     let delay = 700;
@@ -53,6 +72,7 @@
             setTimeout(res, Math.min(350, Math.floor(delay / 2))),
         );
         removed = new Set(toRemove);
+        spawnParticlesForIndices(toRemove);
         willRemove = new Set();
         await new Promise((res) => setTimeout(res, Math.min(420, delay)));
         arr = arr.filter((_, i) => !toRemove.has(i));
@@ -71,6 +91,38 @@
     onMount(() => {
         reset();
     });
+
+    function spawnParticlesForIndices(indices) {
+        if (!particlesContainer) return;
+        const containerRect = particlesContainer.getBoundingClientRect();
+        const now = Date.now();
+        indices.forEach((i) => {
+            const el = cellRefs[i];
+            if (!el) return;
+            const rect = el.getBoundingClientRect();
+            const cx = rect.left - containerRect.left + rect.width / 2;
+            const cy = rect.top - containerRect.top + rect.height / 2;
+            const style = getComputedStyle(el);
+            const color = style.backgroundColor || 'rgba(200,180,160,0.9)';
+            const count = 14;
+            for (let k = 0; k < count; k++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 18 + Math.random() * 70;
+                const dx = Math.cos(angle) * speed;
+                const dy = Math.sin(angle) * speed - Math.random() * 40;
+                const size = 2 + Math.random() * 6;
+                const id = `${now}-${i}-${k}-${Math.random().toString(36).slice(2,7)}`;
+                const delay = Math.random() * 120;
+                particles = [
+                    ...particles,
+                    { id, x: cx, y: cy, dx, dy, size, color, delay },
+                ];
+                setTimeout(() => {
+                    particles = particles.filter((p) => p.id !== id);
+                }, 900 + delay);
+            }
+        });
+    }
 </script>
 
 <section class="visualizer">
@@ -103,12 +155,22 @@
         <div class="array">
             {#each arr as v, i}
                 <div
+                    use:register={i}
                     class="cell {isSorted(arr) ? 'sorted' : ''} {willRemove.has(
                         i,
                     )
                         ? 'will-remove'
                         : ''} {removed.has(i) ? 'removed' : ''}"
                     style="height: {Math.max(8, v)}px"
+                ></div>
+            {/each}
+        </div>
+
+        <div class="particles-container" bind:this={particlesContainer}>
+            {#each particles as p (p.id)}
+                <div
+                    class="particle"
+                    style="left: {p.x}px; top: {p.y}px; width: {p.size}px; height: {p.size}px; background: {p.color}; --dx: {p.dx}px; --dy: {p.dy}px; animation-delay: {p.delay}ms"
                 ></div>
             {/each}
         </div>
@@ -163,6 +225,7 @@
         display: flex;
         justify-content: center;
         min-height: 160px; /* reserve vertical space so controls don't shift */
+        position: relative;
     }
     .array {
         display: flex;
@@ -197,5 +260,38 @@
     .cell.will-remove {
         background: var(--danger);
         transform: translateY(-4px) scale(1.02);
+    }
+
+    .particles-container {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        overflow: visible;
+    }
+
+    .particle {
+        position: absolute;
+        transform: translate(-50%, -50%);
+        border-radius: 50%;
+        will-change: transform, opacity, filter;
+        animation: dust 900ms cubic-bezier(.2,.8,.2,1) both;
+        opacity: 1;
+        filter: blur(0.4px);
+    }
+
+    @keyframes dust {
+        0% {
+            transform: translate(calc(var(--dx) * 0%), calc(var(--dy) * 0%)) scale(1);
+            opacity: 1;
+            filter: blur(0.4px) saturate(1);
+        }
+        30% {
+            opacity: 0.95;
+        }
+        100% {
+            transform: translate(var(--dx), calc(var(--dy) + 18px)) rotate(270deg) scale(0.6);
+            opacity: 0;
+            filter: blur(1.6px) grayscale(30%);
+        }
     }
 </style>
