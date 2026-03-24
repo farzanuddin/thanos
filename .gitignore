@@ -6,8 +6,6 @@ docs/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-package-lock.json
 .DS_Store
 .idea/
 .vscode/
-thanos-screenshot.png
