@@ -1,6 +1,6 @@
 :root {
     --bg: #0b0b10;
-    --subg: #1c1c25;
+    --subg: #14141d;
     --muted: #9aa0a6;
     --accent: #cfcfcf;
     --danger: #ff605c;
@@ -38,4 +38,25 @@ body::before {
 
 button:disabled {
     opacity: 0.6
+}
+
+.code .token.keyword {
+    color: var(--warning);
+    font-weight: bold;
+}
+
+.code .token.function {
+    color: var(--danger);
+}
+
+.code .token.number {
+    color: var(--warning);
+}
+
+.code .token.parameter {
+    color: #e95dff;
+}
+
+.code .token.constant {
+    color: var(--success);
 }

@@ -5,23 +5,19 @@
     let tagline =
         "Checks if the array is sorted. If not, it randomly turns half of the elements to dust.";
 
-    const code = `function thanosSort(arr) {
-    function isSorted(arr) {
-        for (let i = 0; i < arr.length - 1; i++) {
-            if (arr[i] > arr[i + 1]) return false;
-        }
-        return true;
+    const codeHtml = `
+<span class="token keyword">function</span> <span class="token function">thanosSort</span>(<span class="token parameter">arr</span>) {
+    <span class="token keyword">const</span> <span class="token constant">isSorted</span> = (<span class="token parameter">a</span>) => a.every((<span class="token parameter">v, i</span>) => i === <span class="token number">0</span> || v >= a[i - <span class="token number">1</span>]);
+
+    <span class="token keyword">while</span> (arr.length > <span class="token number">1</span> && !isSorted(arr)) {
+        <span class="token keyword">const</span> <span class="token constant">survivorCount</span> = Math.ceil(arr.length / <span class="token number">2</span>);
+        <span class="token keyword">const</span> <span class="token constant">indices</span> = [...arr.keys()].sort(() => Math.random() - <span class="token number">0.5</span>);
+        <span class="token keyword">const</span> <span class="token constant">survivors</span> = <span class="token keyword">new</span> Set(indices.slice(<span class="token number">0</span>, survivorCount));
+
+        arr = arr.filter((_, i) => survivors.has(i));
     }
 
-    while (!isSorted(arr)) {
-        const half = Math.floor(arr.length / 2);
-        for (let i = 0; i < half; i++) {
-            const r = Math.floor(Math.random() * arr.length);
-            arr.splice(r, 1);
-        }
-    }
-
-    return arr;
+    <span class="token keyword">return</span> arr;
 }`;
 </script>
 
@@ -43,10 +39,21 @@
                     <span class="dot yellow"></span>
                     <span class="dot green"></span>
                 </div>
-                <pre class="code">{code}</pre>
+                <pre class="code"><code>{@html codeHtml}</code></pre>
             </div>
         </div>
     </div>
+
+    <footer class="footer">
+        <span
+            >&copy; {new Date().getFullYear()}
+            <a
+                href="https://github.com/farzanuddin"
+                target="_blank"
+                rel="noopener">Farzan Uddin</a
+            ></span
+        >
+    </footer>
 </main>
 
 <style>
@@ -68,7 +75,7 @@
         font-size: clamp(18px, 4vw, 32px);
     }
     .hero .tag {
-        margin: 6px 0 0 0;
+        margin: 0 10px;
         color: var(--muted);
     }
     .center {
@@ -89,8 +96,9 @@
     }
     .code-panel {
         padding: 12px;
-        width: min(600px, 94vw);
-        overflow: hidden;
+        overflow: auto;
+        max-width: 100vw;
+        box-sizing: border-box;
     }
     .code-window {
         border-radius: 8px;
@@ -128,10 +136,30 @@
         padding: 12px;
         background: var(--subg);
         height: 100%;
+        white-space: pre;
+        overflow-x: auto;
+        box-sizing: border-box;
     }
-    @media (min-width: 800px) {
-        .center {
-            flex-direction: column;
-        }
+
+    .footer {
+        width: 100%;
+        text-align: center;
+        color: var(--muted);
+        font-size: 0.7rem;
+        margin-top: 24px;
+        margin-bottom: 10px;
+        letter-spacing: 0.01em;
+    }
+    .footer a {
+        color: var(--accent);
+        text-decoration: underline dotted;
+        transition: color 0.18s;
+    }
+    .footer a:hover {
+        color: var(--success);
+    }
+    .code {
+        font-size: 12px;
+        padding: 10px 4px;
     }
 </style>

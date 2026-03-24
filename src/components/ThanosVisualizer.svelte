@@ -11,7 +11,10 @@
     let cellRefs = [];
     let particles = [];
     let particlesContainer;
-    
+    let running = false;
+    let balanced = false;
+    let delay = 700;
+
     function register(node, idx) {
         let current = idx;
         cellRefs[current] = node;
@@ -27,9 +30,6 @@
             },
         };
     }
-    let running = false;
-    let balanced = false;
-    let delay = 700;
 
     function randArray(n, max) {
         const min = Math.min(minVal, max);
@@ -88,10 +88,6 @@
         balanced = isSorted(arr) || arr.length <= 1;
     }
 
-    onMount(() => {
-        reset();
-    });
-
     function spawnParticlesForIndices(indices) {
         if (!particlesContainer) return;
         const containerRect = particlesContainer.getBoundingClientRect();
@@ -103,7 +99,7 @@
             const cx = rect.left - containerRect.left + rect.width / 2;
             const cy = rect.top - containerRect.top + rect.height / 2;
             const style = getComputedStyle(el);
-            const color = style.backgroundColor || 'rgba(200,180,160,0.9)';
+            const color = style.backgroundColor || "rgba(200,180,160,0.9)";
             const count = 14;
             for (let k = 0; k < count; k++) {
                 const angle = Math.random() * Math.PI * 2;
@@ -111,7 +107,7 @@
                 const dx = Math.cos(angle) * speed;
                 const dy = Math.sin(angle) * speed - Math.random() * 40;
                 const size = 2 + Math.random() * 6;
-                const id = `${now}-${i}-${k}-${Math.random().toString(36).slice(2,7)}`;
+                const id = `${now}-${i}-${k}-${Math.random().toString(36).slice(2, 7)}`;
                 const delay = Math.random() * 120;
                 particles = [
                     ...particles,
@@ -123,6 +119,10 @@
             }
         });
     }
+
+    onMount(() => {
+        reset();
+    });
 </script>
 
 <section class="visualizer">
@@ -261,27 +261,25 @@
         background: var(--danger);
         transform: translateY(-4px) scale(1.02);
     }
-
     .particles-container {
         position: absolute;
         inset: 0;
         pointer-events: none;
         overflow: visible;
     }
-
     .particle {
         position: absolute;
         transform: translate(-50%, -50%);
         border-radius: 50%;
         will-change: transform, opacity, filter;
-        animation: dust 900ms cubic-bezier(.2,.8,.2,1) both;
+        animation: dust 900ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
         opacity: 1;
         filter: blur(0.4px);
     }
-
     @keyframes dust {
         0% {
-            transform: translate(calc(var(--dx) * 0%), calc(var(--dy) * 0%)) scale(1);
+            transform: translate(calc(var(--dx) * 0%), calc(var(--dy) * 0%))
+                scale(1);
             opacity: 1;
             filter: blur(0.4px) saturate(1);
         }
@@ -289,7 +287,8 @@
             opacity: 0.95;
         }
         100% {
-            transform: translate(var(--dx), calc(var(--dy) + 18px)) rotate(270deg) scale(0.6);
+            transform: translate(var(--dx), calc(var(--dy) + 18px))
+                rotate(270deg) scale(0.6);
             opacity: 0;
             filter: blur(1.6px) grayscale(30%);
         }
