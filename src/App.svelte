@@ -160,6 +160,6 @@
     }
     .code {
         font-size: 12px;
-        padding: 10px 4px;
+        padding: 15px 20px;
     }
 </style>
