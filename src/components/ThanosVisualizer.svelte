@@ -1,6 +1,8 @@
 <script>
     import { onMount } from "svelte";
-    import { RefreshCw, Hand, Loader } from "lucide-svelte";
+
+    const MARK_DELAY = 350;
+    const REMOVE_DELAY = 420;
 
     let size = 10;
     let minVal = 20;
@@ -13,20 +15,16 @@
     let particlesContainer;
     let running = false;
     let balanced = false;
+    let abort = false;
     let delay = 700;
 
+    $: sorted = isSorted(arr);
+
     function register(node, idx) {
-        let current = idx;
-        cellRefs[current] = node;
+        cellRefs[idx] = node;
         return {
-            update(newIdx) {
-                if (newIdx === current) return;
-                cellRefs[current] = null;
-                current = newIdx;
-                cellRefs[current] = node;
-            },
             destroy() {
-                cellRefs[current] = null;
+                cellRefs[idx] = null;
             },
         };
     }
@@ -54,6 +52,7 @@
     }
 
     function reset() {
+        abort = true;
         arr = randArray(size, maxVal);
         removed = new Set();
         running = false;
@@ -61,7 +60,7 @@
     }
 
     async function step() {
-        if (isSorted(arr) || arr.length <= 1) return;
+        if (abort || sorted || arr.length <= 1) return;
         const n = arr.length;
         const indices = Array.from({ length: n }, (_, i) => i);
         shuffle(indices);
@@ -69,23 +68,27 @@
         const toRemove = new Set(indices.slice(0, removeCount));
         willRemove = new Set(toRemove);
         await new Promise((res) =>
-            setTimeout(res, Math.min(350, Math.floor(delay / 2))),
+            setTimeout(res, Math.min(MARK_DELAY, Math.floor(delay / 2))),
         );
+        if (abort) return;
         removed = new Set(toRemove);
         spawnParticlesForIndices(toRemove);
         willRemove = new Set();
-        await new Promise((res) => setTimeout(res, Math.min(420, delay)));
+        await new Promise((res) => setTimeout(res, Math.min(REMOVE_DELAY, delay)));
+        if (abort) return;
         arr = arr.filter((_, i) => !toRemove.has(i));
         removed = new Set();
     }
     async function run() {
+        abort = false;
         running = true;
-        while (running && !isSorted(arr) && arr.length > 1) {
+        while (!abort && running && !sorted && arr.length > 1) {
             await step();
+            if (abort) break;
             await new Promise((r) => setTimeout(r, delay));
         }
         running = false;
-        balanced = isSorted(arr) || arr.length <= 1;
+        balanced = sorted || arr.length <= 1;
     }
 
     function spawnParticlesForIndices(indices) {
@@ -127,25 +130,26 @@
 
 <section class="visualizer">
     <div class="controls">
-        <button on:click={reset} aria-label="Reset" title="Reset">
-            <RefreshCw size={18} />
+        <button on:click={reset} disabled={running} aria-label="Reset" title="Reset">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
             <span class="btn-label">Reset</span>
         </button>
         <button
             class="snap-button"
+            class:balanced
             on:click={run}
             disabled={running}
             aria-label="Snap"
             title="Snap"
         >
             {#if running}
-                <Loader size={18} class="spinner" />
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="spinner"><path d="M12 2v4"/><path d="m16.2 7.8 2.9-2.9"/><path d="M18 12h4"/><path d="m16.2 16.2 2.9 2.9"/><path d="M12 18v4"/><path d="m4.9 19.1 2.9-2.9"/><path d="M2 12h4"/><path d="m4.9 4.9 2.9 2.9"/></svg>
                 <span class="btn-label">Balancing the scales</span>
             {:else if balanced}
-                <Hand size={18} />
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2"/><path d="M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>
                 <span class="btn-label">Perfectly balanced</span>
             {:else}
-                <Hand size={18} />
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2"/><path d="M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>
                 <span class="btn-label">Snap</span>
             {/if}
         </button>
@@ -156,7 +160,7 @@
             {#each arr as v, i}
                 <div
                     use:register={i}
-                    class="cell {isSorted(arr) ? 'sorted' : ''} {willRemove.has(
+                    class="cell {sorted ? 'sorted' : ''} {willRemove.has(
                         i,
                     )
                         ? 'will-remove'
@@ -174,6 +178,16 @@
                 ></div>
             {/each}
         </div>
+    </div>
+
+    <div aria-live="polite" class="sr-only">
+        {#if balanced}
+            Array is perfectly balanced and sorted.
+        {:else if running}
+            Balancing the array&hellip;
+        {:else}
+            Array has {arr.length} elements. Click Snap to balance.
+        {/if}
     </div>
 </section>
 
@@ -215,10 +229,21 @@
         opacity: 0.5;
         cursor: not-allowed;
     }
+    .controls button.balanced {
+        opacity: 0.5;
+        cursor: default;
+        pointer-events: none;
+    }
     .controls .btn-label {
         font-size: 0.9rem;
         text-transform: capitalize;
         line-height: 1;
+    }
+    .spinner {
+        animation: spin 800ms linear infinite;
+    }
+    @keyframes spin {
+        to { transform: rotate(360deg); }
     }
     .array-area {
         padding: 14px;
@@ -291,6 +316,30 @@
                 rotate(270deg) scale(0.6);
             opacity: 0;
             filter: blur(1.6px) grayscale(30%);
+        }
+    }
+
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border-width: 0;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .particle {
+            display: none;
+        }
+        .cell {
+            transition: none;
+        }
+        .particles-container {
+            display: none;
         }
     }
 </style>
