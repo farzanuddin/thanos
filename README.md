@@ -18,9 +18,11 @@ Just a small focused interactive visualization built on Svelte and Vite. Kind of
 
 ## Tech Stack
 
-- **Svelte 4** — Reactive UI framework
-- **Vite** — Build tool and development server
-- **lucide-svelte** — Lightweight icon set
+| Technology                                                                     | Version | Role                        |
+| ------------------------------------------------------------------------------ | :-----: | --------------------------- |
+| [Svelte](https://svelte.dev/)                                                  | ^4.0.0  | UI framework                |
+| [Vite](https://vitejs.dev/)                                                    | ^4.4.9  | Build tool & dev server     |
+| [@sveltejs/vite-plugin-svelte](https://github.com/sveltejs/vite-plugin-svelte) | ^2.0.0  | Svelte integration for Vite |
 
 ## Getting Started
 
